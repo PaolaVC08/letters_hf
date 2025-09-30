@@ -1,11 +1,13 @@
-import os # Necesario para unir rutas de carpetas y archivos
+import os
 
 def leer_matriztxt(ruta_archivo):
     matriz = []
     with open(ruta_archivo, 'r') as f:
         for linea in f:
-            fila = [int(n) for n in linea.strip().split()]
-            matriz.append(fila)
+            linea_limpia = linea.strip()
+            if linea_limpia:
+                fila = [int(n) for n in linea_limpia.split()]
+                matriz.append(fila)
     return matriz
 
 def procesar_patron(matriz):
@@ -13,14 +15,13 @@ def procesar_patron(matriz):
     vector_bipolar = [-1 if valor == 0 else 1 for valor in vector_plano]
     return vector_bipolar
 
-# Ruta a la carpeta de los datos
 carpeta_dataset = 'dataset'
 
 # read h.txt, e.txt, o.txt, etc.
 archivos_entrenamiento = ['h.txt', 'o.txt', 'e.txt', 'k.txt', 'j.txt', 'i.txt']
 patrones_entrenamiento = []
 
-print("--- Cargando y Procesando Patrones de Entrenamiento ---")
+print("cargando patrones")
 for nombre_archivo in archivos_entrenamiento:
     ruta_completa = os.path.join(carpeta_dataset, nombre_archivo)
     matriz = leer_matriztxt(ruta_completa)
@@ -41,35 +42,30 @@ for patron in patrones_entrenamiento:
             else:
                 matriz_W[i][j] += patron[i] * patron[j]
 
-print("\n--- Matriz de Pesos W calculada ---")
-
+print("\nMatriz de Pesos W ")
+for fila in matriz_W:
+    print(fila)
+print ("\n")
 
 # FASE DE RECONOCIMIENTO
 
 # target
-print("\n--- Cargando Patrón de Entrada (Target) ---")
 archivo_target = 'x1.txt' 
 ruta_target = os.path.join(carpeta_dataset, archivo_target)
 
 matriz_target = leer_matriztxt(ruta_target)
 patron_entrada = procesar_patron(matriz_target)
 
-print(f"Patrón de entrada cargado desde: {archivo_target}")
 print(f"Patrón de Entrada U(0): {patron_entrada}")
 
-
-print("\n------------------")
-print('hopfield...')
-print("------------------\n")
-
-# Tu bucle de actualización de estado va aquí
+# Inicio de bucle
 max_iteraciones = 50
 U_actual = patron_entrada[:] 
 iteracion = 0
 
 while True:
     iteracion += 1
-    print(f"\n--- Iniciando Iteración {iteracion} ---")
+    print(f"\nIteración {iteracion} ")
     U_anterior = U_actual[:]
 
     # Multiplicar U_actual * W
@@ -94,21 +90,20 @@ while True:
     U_actual = U_siguiente
     print(f"Nuevo Estado U({iteracion}): {U_actual}")
 
-    # Condición de parada
+    # Condición de stop
     if U_actual == U_anterior:
-        print("\n¡La red ha alcanzado un estado estable! ")
+        print("\nLa red ha alcanzado un estado estable")
         break
     
     if iteracion >= max_iteraciones:
         print("\nLa red no convergió en el máximo de iteraciones.")
         break
 
-print(f"\nResultado Final: El patrón de entrada converge a: {U_actual}")
+print(f"\nresultado final: El patrón de entrada converge a: {U_actual}")
 
-# Opcional: Convertir el resultado de nuevo a una matriz para visualizarlo
-print("\n--- Patrón Reconstruido (Matriz 8x5) ---")
+# resultado a una matriz
+print("\nResultado final en matriz")
 for i in range(0, tamano_patron, 5):
     fila = U_actual[i:i+5]
-    # Convierte a 1 y 0 para que sea más fácil de leer
-    fila_visual = ['1' if val == 1 else '0' for val in fila]
+    fila_visual = ['1' if val == 1 else '.' for val in fila]
     print(" ".join(fila_visual))
